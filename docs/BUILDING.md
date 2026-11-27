@@ -1,50 +1,58 @@
-# Building and running
+# Сборка и запуск
 
-## Build dependencies
+## Необходимые инструменты
 
-- Clang targeting x86_64-pc-win32-coff and x86_64-unknown-none-elf
-- lld-link and ld.lld
-- GNU Make
-- A host C compiler for unit tests
-- For emulator runs: qemu-system-x86_64 and OVMF firmware code/variable images
+Для сборки проекта требуются:
 
-No Linux distribution runtime is used by the target. The host operating system is only a development environment.
+- Clang с поддержкой целей `x86_64-pc-win32-coff` и `x86_64-unknown-none-elf`;
+- `lld-link` и `ld.lld`;
+- GNU Make;
+- хостовый C-компилятор для модульных тестов;
+- для запуска в эмуляторе — `qemu-system-x86_64` и файлы UEFI-прошивки OVMF (образ кода и шаблон переменных).
 
-## Build
+Целевая система не использует среду выполнения какого-либо дистрибутива Linux. Хостовая ОС нужна только для разработки и сборки.
 
-From the repository root:
+## Сборка
+
+Открой терминал в корне репозитория и выполни:
 
 ~~~sh
 make
 make test
 ~~~
 
-Artifacts:
+Результаты сборки:
 
-- build/BOOTX64.EFI: removable-media x86_64 UEFI application.
-- build/kernel.elf: freestanding ELF64 kernel image, built separately.
+- `build/BOOTX64.EFI` — приложение UEFI x86_64 для загрузки со съёмного носителя;
+- `build/kernel.elf` — freestanding-образ ядра ELF64, который собирается отдельно.
 
-The UEFI app and kernel are deliberately separate at this milestone. The current app does not load or execute kernel.elf.
+На текущем этапе UEFI-приложение и ядро намеренно разделены. Приложение пока не загружает и не запускает `kernel.elf`.
 
-## Run under QEMU
+## Запуск в QEMU
 
-Set OVMF_CODE to the path of the firmware code image. If OVMF_VARS is not in a standard location, set that variable too.
+Укажи переменную `OVMF_CODE`, содержащую путь к файлу кода UEFI-прошивки. При необходимости отдельно укажи `OVMF_VARS` — путь к шаблону хранилища переменных прошивки.
+
+Пример:
 
 ~~~sh
 OVMF_CODE=/usr/share/OVMF/OVMF_CODE.fd make run
 ~~~
 
-The launcher stages the EFI binary under EFI/BOOT/BOOTX64.EFI and starts QEMU with a writable copy of the firmware variable store. The UEFI application writes its progress report to the firmware console.
+Скрипт размещает EFI-файл по стандартному пути съёмного носителя `EFI/BOOT/BOOTX64.EFI`, создаёт рабочую копию хранилища переменных прошивки и запускает QEMU. Диагностические сообщения приложения выводятся в консоль прошивки.
 
-## Troubleshooting
+Обрати внимание: сейчас QEMU запускает только приложение UEFI. Передача управления ядру ещё не реализована.
 
-- If clang is missing, install a Clang/LLVM toolchain.
-- If lld-link or ld.lld is missing, install the LLVM linker tools.
-- If QEMU cannot be found, install the x86_64 system emulator package.
-- If OVMF firmware cannot be found, set OVMF_CODE and OVMF_VARS explicitly.
-- If the host C compiler is not named cc, pass HOST_CC=your-compiler to make test.
+## Возможные проблемы
 
-## Clean build
+- Если команда `clang` не найдена, установи Clang/LLVM.
+- Если отсутствует `lld-link` или `ld.lld`, установи инструменты компоновки LLVM.
+- Если QEMU не найден, установи эмулятор системы x86_64.
+- Если OVMF не обнаружена автоматически, задай переменные `OVMF_CODE` и `OVMF_VARS` вручную.
+- Если хостовый C-компилятор называется не `cc`, передай его имя через переменную `HOST_CC` в Make.
+
+## Чистая пересборка
+
+Чтобы удалить предыдущие результаты и собрать проект заново:
 
 ~~~sh
 make clean
