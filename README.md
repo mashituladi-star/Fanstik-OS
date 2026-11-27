@@ -1,107 +1,117 @@
 # Fanstik-OS
 
-**An independent x86_64 operating-system project written in C and Assembly.**
+**Самостоятельная операционная система для x86_64, разрабатываемая с нуля на C и Assembly.**
 
-Fanstik-OS is being developed from the ground up for UEFI systems. It is not a Linux distribution, a Linux fork, or a re-skinned existing operating system. The long-term goal is to build an independently designed kernel, boot process, memory manager, drivers, filesystem, userspace, and graphical environment.
+Fanstik-OS создаётся для компьютеров с прошивкой UEFI. Это не дистрибутив Linux, не форк Linux и не переработанная оболочка существующей операционной системы. Цель проекта — разработать собственные загрузчик, ядро, управление памятью, драйверы, файловую систему, пользовательское окружение и графическую среду.
 
-> **Development status: early bring-up scaffold.** The repository currently targets x86_64 UEFI and contains a PE/COFF UEFI console application, a separately built freestanding ELF kernel, a shared boot-information ABI, serial diagnostics, host-side tests, and a QEMU launch script. The UEFI application and kernel are not yet connected: the loader does not load the ELF kernel or transfer control to it. Do not treat this milestone as a usable operating system.
+> **Текущий статус: начальный этап разработки.** В репозитории есть приложение UEFI в формате PE/COFF, отдельно собираемое freestanding-ядро ELF, общий формат загрузочной информации, ранняя диагностика через последовательный порт, модульные тесты и скрипт запуска QEMU. Загрузчик и ядро пока не соединены: приложение UEFI ещё не загружает ELF-ядро и не передаёт ему управление. На этом этапе проект нельзя считать готовой или пригодной для повседневного использования ОС.
 
-## Principles
+## Языковая политика проекта
 
-- **Independent implementation:** no Linux kernel, distribution base, or copied OS runtime.
-- **C and Assembly:** freestanding C for the kernel and UEFI application; x86_64 Assembly for the low-level entry path.
-- **UEFI first:** x86_64 UEFI is the only supported boot mode in this project. Legacy BIOS is out of scope.
-- **Small, testable milestones:** every subsystem should have a clear contract and tests where practical.
-- **Honest status:** documentation distinguishes implemented, experimental, and planned features.
+Fanstik-OS разрабатывается на **английском языке**. Английский используется в исходном коде, именах файлов и каталогов, идентификаторах, комментариях в коде, сообщениях загрузчика и ядра, системных сообщениях, интерфейсе и технических обозначениях.
 
-## Current milestone
+**Вся документация проекта ведётся на русском языке.** Это относится к данному README, материалам в каталоге `docs/`, инструкциям по сборке, описаниям архитектуры, дорожной карте и руководствам для разработчиков. Названия файлов, команд, API, регистров, форматов и инструментов сохраняются в оригинальном написании, когда это необходимо для точности.
 
-| Component | Status |
+Новые документы Markdown (`.md`) следует писать на русском. Исходный код и пользовательские сообщения самой операционной системы не нужно переводить на русский.
+
+## Основные принципы
+
+- **Самостоятельная реализация:** без ядра Linux, основы дистрибутива Linux и заимствованной системной среды.
+- **C и Assembly:** freestanding-код на C для ядра и UEFI-приложения; Assembly для низкоуровневых операций x86_64.
+- **Только UEFI:** целевая платформа — x86_64 UEFI. Legacy BIOS не поддерживается и не входит в планы.
+- **Небольшие проверяемые этапы:** у каждой подсистемы должен быть понятный контракт и тесты там, где это возможно.
+- **Честное описание готовности:** документация отдельно отмечает реализованные, экспериментальные и запланированные функции.
+
+## Текущее состояние
+
+| Компонент | Состояние |
 | --- | --- |
-| x86_64 UEFI application entry | Implemented |
-| Firmware console output | Implemented |
-| Freestanding ELF kernel build | Implemented |
-| Kernel assembly entry stub | Implemented |
-| COM1 serial diagnostics | Implemented |
-| Shared boot information structure | Implemented |
-| Host-side boot-info tests | Implemented |
-| QEMU + OVMF launch script | Scaffolded; requires local firmware and QEMU |
-| UEFI ELF loading and kernel handoff | Not implemented |
-| Physical memory manager / paging | Not implemented |
-| Interrupts / scheduler / userspace | Planned |
+| Точка входа приложения x86_64 UEFI | Реализована |
+| Вывод через консоль прошивки | Реализован |
+| Сборка freestanding-ядра ELF | Реализована |
+| Assembly-заглушка точки входа ядра | Реализована |
+| Ранняя диагностика через COM1 | Реализована в коде ядра |
+| Общая структура загрузочной информации | Реализована |
+| Host-side тесты структуры boot-info | Реализованы |
+| Скрипт запуска QEMU + OVMF | Подготовлен; нужны QEMU и файлы прошивки |
+| Загрузка ELF и передача управления ядру | Ещё не реализованы |
+| Менеджер физической памяти и paging | Ещё не реализованы |
+| Прерывания, планировщик и userspace | Запланированы |
 
-## Repository layout
+## Структура репозитория
 
 ~~~text
 .
 ├── .github/workflows/ci.yml
-├── boot/uefi/                 # Minimal x86_64 UEFI application
-├── docs/                      # Architecture, build guide, roadmap
-├── include/fanstik/            # Shared freestanding interfaces
+├── boot/uefi/                 # Минимальное приложение x86_64 UEFI
+├── docs/                      # Русскоязычная документация
+├── include/fanstik/           # Общие freestanding-интерфейсы
 ├── kernel/
-│   ├── arch/x86_64/            # Assembly entry and architecture code
-│   ├── core/                   # Kernel core and boot-info validation
-│   └── drivers/                # Early serial driver
-├── linker/                    # Kernel ELF linker script
-├── scripts/                   # Local build / QEMU helpers
-├── tests/                     # Host-side unit tests
+│   ├── arch/x86_64/            # Assembly-точка входа и код архитектуры
+│   ├── core/                   # Основа ядра и проверка boot-info
+│   └── drivers/                # Ранний драйвер последовательного порта
+├── linker/                    # Сценарий компоновки ELF-ядра
+├── scripts/                   # Вспомогательные скрипты сборки и QEMU
+├── tests/                     # Модульные тесты
 ├── Makefile
 └── README.md
 ~~~
 
-## Quick start
+## Быстрый старт
 
-### Build
+### Сборка
 
-Required tools:
+Необходимые инструменты:
 
-- Clang/LLVM (clang, lld-link, ld.lld)
+- Clang/LLVM (`clang`, `lld-link`, `ld.lld`)
 - GNU Make
-- A C compiler for host-side tests (cc)
+- C-компилятор для host-side тестов (`cc`)
 
-Then run:
+В корне репозитория выполни:
 
 ~~~sh
 make
 make test
 ~~~
 
-Build products are written to build/:
+Результаты сборки помещаются в каталог `build/`:
 
-- BOOTX64.EFI — UEFI x64 application.
-- kernel.elf — freestanding kernel ELF image; not yet loaded by the UEFI application.
+- `BOOTX64.EFI` — приложение UEFI x64.
+- `kernel.elf` — freestanding-образ ядра ELF; на текущем этапе загрузчик его ещё не запускает.
 
-### Run the UEFI application in QEMU
+### Запуск UEFI-приложения в QEMU
 
-Install QEMU for x86_64 and an OVMF UEFI firmware image, then set OVMF_CODE to the firmware code image if it is not found in a standard location:
+Установи QEMU для x86_64 и прошивку OVMF для UEFI. Если OVMF не находится автоматически, укажи путь к файлу прошивки:
 
 ~~~sh
 OVMF_CODE=/path/to/OVMF_CODE.fd make run
 ~~~
 
-The launch script creates a temporary FAT directory image containing the removable-media boot path EFI/BOOT/BOOTX64.EFI. It boots the current UEFI application only; it does not boot the kernel yet.
+Скрипт создаёт временную FAT-структуру с путём загрузки съёмного носителя `EFI/BOOT/BOOTX64.EFI`. Сейчас запускается только приложение UEFI — ядро пока не загружается.
 
-## Development
-
-Useful targets:
+## Команды Make
 
 ~~~sh
-make                 # Build the UEFI application and kernel ELF
-make bootloader      # Build only BOOTX64.EFI
-make kernel          # Build only kernel.elf
-make test            # Run host-side unit tests
-make clean           # Remove build/
-make run             # Launch the UEFI application in QEMU/OVMF
+make                 # Собрать UEFI-приложение и ELF-ядро
+make bootloader      # Собрать только BOOTX64.EFI
+make kernel          # Собрать только kernel.elf
+make test            # Запустить host-side тесты
+make clean           # Удалить build/
+make run             # Запустить UEFI-приложение в QEMU/OVMF
 ~~~
 
-See docs/BUILDING.md, docs/ARCHITECTURE.md, and docs/ROADMAP.md.
+Подробности приведены в документах:
 
-## Scope and non-goals
+- [Сборка и запуск](docs/BUILDING.md)
+- [Обзор архитектуры](docs/ARCHITECTURE.md)
+- [Дорожная карта](docs/ROADMAP.md)
 
-The initial target is **x86_64 UEFI**. There is no BIOS boot path. The project does not depend on Arch Linux at runtime and is not an Arch installer. Development tools may be installed on any supported host OS; the resulting target is the Fanstik-OS image.
+## Границы проекта
 
-The project is at an early stage. No claim is made yet that it supports hardware beyond the firmware console in the UEFI application.
+Первая целевая платформа — **x86_64 UEFI**. Загрузки через BIOS не будет. Fanstik-OS не зависит от Arch Linux во время работы и не является установщиком Arch Linux. Инструменты разработки можно запускать на разных хостовых ОС; результатом является собственный образ Fanstik-OS.
 
-## License
+Проект находится на ранней стадии. Пока нельзя заявлять о поддержке оборудования за пределами базовых возможностей консоли прошивки в UEFI-приложении.
 
-Fanstik-OS is licensed under the MIT License. See LICENSE.
+## Лицензия
+
+Fanstik-OS распространяется по лицензии MIT. Подробности — в файле [LICENSE](LICENSE).
