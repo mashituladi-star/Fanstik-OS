@@ -1,69 +1,70 @@
-# Roadmap
+# Дорожная карта Fanstik-OS
 
-The roadmap is milestone-based. A milestone is complete only when its acceptance checks pass and its status is updated here.
+Разработка ведётся по этапам. Этап считается завершённым только после прохождения критериев приёмки и обновления его статуса в этом документе.
 
-## M0 — repository and toolchain
+## M0 — репозиторий и инструменты сборки
 
-- [x] Establish repository structure and coding conventions.
-- [x] Add an x86_64 UEFI console application.
-- [x] Add a separate freestanding ELF64 kernel build.
-- [x] Add host-side tests and CI configuration.
-- [ ] Verify build and QEMU launch on a clean external machine.
+- [x] Создать структуру репозитория и определить базовые правила оформления кода.
+- [x] Добавить консольное приложение UEFI x86_64.
+- [x] Добавить отдельную сборку freestanding-ядра ELF64.
+- [x] Добавить host-side тесты и конфигурацию CI.
+- [ ] Проверить сборку и запуск QEMU на чистом внешнем окружении.
 
-## M1 — UEFI loader and kernel handoff
+## M1 — UEFI-загрузчик и передача управления ядру
 
-- [ ] Locate the kernel image on the EFI system partition.
-- [ ] Read the complete kernel through UEFI file protocols.
-- [ ] Validate ELF64 headers and program-header bounds.
-- [ ] Allocate and load PT_LOAD segments with overflow and overlap checks.
-- [ ] Discover GOP framebuffer and ACPI RSDP configuration table.
-- [ ] Capture the final UEFI memory map and safely retry GetMemoryMap/ExitBootServices.
-- [ ] Populate the versioned boot-info structure.
-- [ ] Allocate and align a kernel stack.
-- [ ] Transfer control using the documented x86_64 ABI.
-- [ ] Verify the first kernel serial message in QEMU.
+- [ ] Находить файл ядра на EFI System Partition.
+- [ ] Читать полный файл ядра через файловые протоколы UEFI.
+- [ ] Проверять ELF64-заголовки и границы program headers.
+- [ ] Выделять память и загружать сегменты PT_LOAD с проверкой переполнений и пересечений.
+- [ ] Получать сведения о framebuffer через GOP и таблицу ACPI RSDP.
+- [ ] Получать финальную карту памяти UEFI и безопасно повторять операции GetMemoryMap/ExitBootServices при необходимости.
+- [ ] Заполнять версионируемую структуру boot-info.
+- [ ] Выделять и выравнивать стек ядра.
+- [ ] Передавать управление ядру в соответствии с документированным ABI x86_64.
+- [ ] Проверить появление первого сообщения ядра в последовательном журнале QEMU.
 
-## M2 — CPU and memory foundation
+## M2 — основа CPU и памяти
 
-- [ ] Establish GDT and IDT.
-- [ ] Add exception handlers and panic diagnostics.
-- [ ] Implement physical page allocation from the UEFI memory map.
-- [ ] Define virtual-memory layout and kernel heap allocation.
-- [ ] Add allocator and address-range tests.
+- [ ] Настроить GDT и IDT.
+- [ ] Добавить обработчики исключений и диагностические сообщения kernel panic.
+- [ ] Реализовать распределение физических страниц на основе карты памяти UEFI.
+- [ ] Определить виртуальную карту памяти и реализовать kernel heap.
+- [ ] Добавить тесты распределителя памяти и проверки диапазонов адресов.
 
-## M3 — interrupts and time
+## M3 — прерывания и время
 
-- [ ] Add interrupt-controller abstraction and timer source.
-- [ ] Add interrupt-safe synchronization primitives.
-- [ ] Measure and log timer ticks in QEMU.
+- [ ] Добавить абстракцию контроллера прерываний.
+- [ ] Настроить источник системного таймера.
+- [ ] Добавить примитивы синхронизации, безопасные для обработчиков прерываний.
+- [ ] Измерять и выводить количество тиков таймера в QEMU.
 
-## M4 — execution model
+## M4 — модель выполнения
 
-- [ ] Add kernel threads and context switching.
-- [ ] Add a deterministic scheduler test.
-- [ ] Define process and address-space ownership.
-- [ ] Add user-mode transition and syscall entry/exit.
+- [ ] Добавить потоки ядра и переключение контекста.
+- [ ] Создать детерминированный тест планировщика.
+- [ ] Определить владение процессами и адресными пространствами.
+- [ ] Реализовать переход в пользовательский режим и вход/выход из системных вызовов.
 
-## M5 — devices and storage
+## M5 — устройства и хранение данных
 
-- [ ] Enumerate PCI devices.
-- [ ] Define driver registration and device lifetimes.
-- [ ] Add basic block-device support.
-- [ ] Implement VFS and an initial read-only filesystem.
-- [ ] Add an in-memory initramfs format and tooling.
+- [ ] Реализовать перечисление устройств PCI.
+- [ ] Определить регистрацию драйверов и жизненный цикл устройств.
+- [ ] Добавить базовую поддержку блочных устройств.
+- [ ] Реализовать VFS и начальную файловую систему только для чтения.
+- [ ] Добавить формат initramfs в памяти и инструменты для его подготовки.
 
-## M6 — userspace and interface
+## M6 — пользовательская среда и интерфейс
 
-- [ ] Start a first userspace init process.
-- [ ] Add a small command shell and system utilities.
-- [ ] Add a framebuffer text console.
-- [ ] Define graphics/input boundaries before beginning a desktop environment.
+- [ ] Запустить первый пользовательский процесс init.
+- [ ] Добавить небольшую командную оболочку и системные утилиты.
+- [ ] Реализовать текстовую консоль на framebuffer.
+- [ ] Определить стабильные границы графической подсистемы и ввода до начала разработки рабочего стола.
 
-## Quality gates
+## Критерии качества
 
-- Every loader input is bounds-checked before dereferencing.
-- All address and size arithmetic is checked for overflow.
-- No UEFI boot service is used after successful ExitBootServices.
-- Kernel code builds without a hosted C runtime.
-- Each milestone has reproducible build steps and test evidence.
-- Documentation never describes planned code as implemented.
+- Все входные данные загрузчика проверяются на границы до обращения к ним.
+- Арифметика адресов и размеров защищена от переполнения.
+- После успешного вызова `ExitBootServices` код не использует сервисы загрузки UEFI.
+- Ядро собирается без hosted C runtime.
+- Для каждого этапа есть воспроизводимая инструкция сборки и проверяемые результаты тестирования.
+- Документация не описывает запланированные возможности как уже реализованные.
