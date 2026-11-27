@@ -1,37 +1,51 @@
-# Architecture overview
+# Обзор архитектуры
 
-## Design constraints
+## Основные ограничения и решения
 
-Fanstik-OS targets x86_64 machines booted through UEFI. Legacy BIOS is out of scope. The operating system is an independent implementation; it does not use the Linux kernel or inherit a Linux userspace.
+Fanstik-OS разрабатывается для компьютеров x86_64, загружаемых через UEFI. Legacy BIOS не поддерживается и не входит в планы. Операционная система реализуется самостоятельно: проект не использует ядро Linux и не наследует пользовательскую среду Linux.
 
-Target operating-system code is freestanding C and x86_64 Assembly. Host-side tooling and CI scripts may use shell and YAML.
+Системный код пишется на C и Assembly в freestanding-режиме. Вспомогательные инструменты разработки и CI могут использовать shell и YAML.
 
-## UEFI application
+## Язык проекта и язык документации
 
-boot/uefi is built as a PE/COFF x86_64 EFI application. Firmware enters efi_main with an image handle and system table. The current application checks the console output interface and prints a bring-up report. It does not yet load the kernel, parse ELF, obtain the final memory map, or call ExitBootServices.
+Исходный код, имена файлов и каталогов, идентификаторы, комментарии в исходниках, сообщения загрузчика и ядра, системный интерфейс и технические обозначения проекта — на английском языке.
 
-## Kernel image
+Вся документация, включая этот документ, README, инструкции, архитектурные описания и дорожную карту, ведётся на русском языке. Названия API, инструкций процессора, регистров и форматов сохраняются на английском, если перевод может привести к неоднозначности.
 
-kernel/ is built as a freestanding ELF64 image linked at 0x00200000 for the initial identity-mapped bring-up design. The linker script separates executable and writable load segments. A future loader must provide a valid stack, preserve the boot-info pointer in RDI, and map the kernel at its linked addresses before jumping to _start.
+## Приложение UEFI
 
-## Boot information ABI
+Каталог `boot/uefi` содержит приложение UEFI x86_64 в формате PE/COFF. Прошивка передаёт управление функции `efi_main`, предоставляя дескриптор приложения и системную таблицу.
 
-include/fanstik/boot_info.h defines a versioned structure for the future loader-to-kernel handoff. Addresses are physical until a virtual-memory policy is implemented. Do not reorder existing fields without introducing a new version or compatibility plan.
+Текущая реализация проверяет наличие интерфейса вывода в консоль и отображает диагностическое сообщение. Приложение пока не загружает ядро, не разбирает ELF, не получает финальную карту памяти и не вызывает `ExitBootServices`.
 
-## Early diagnostics
+## Образ ядра
 
-The kernel serial driver targets COM1 (I/O base 0x3F8). It uses bounded polling to avoid waiting forever for the transmitter. Serial output is intended for QEMU logs and early hardware diagnostics.
+Каталог `kernel/` собирается в freestanding-образ ELF64, связанный по адресу `0x00200000`. Это начальная схема загрузки с идентичным отображением адресов. Сценарий компоновки разделяет исполняемые и доступные для записи сегменты.
 
-## Planned subsystem boundaries
+Будущий загрузчик должен подготовить корректный стек, передать указатель на boot-info в регистре `RDI` и обеспечить отображение ядра по адресам, заданным при компоновке, прежде чем перейти к `_start`.
 
-- arch/x86_64: CPU setup, GDT, IDT, exception entry, context switching.
-- mm: physical page allocator, virtual address-space management, kernel heap.
-- interrupts: exception handlers, PIC/APIC routing, timer source.
-- scheduler: threads, runnable queues, context switching.
-- syscall: user/kernel ABI and privilege transitions.
-- drivers: console, storage, input, PCI enumeration, timers.
-- fs: VFS and initial in-memory filesystem.
-- userspace: init process, shell, system utilities.
-- graphics: framebuffer console first, compositor/window system later.
+## ABI загрузочной информации
 
-These are planned boundaries, not implemented subsystems.
+Файл `include/fanstik/boot_info.h` определяет версионируемую структуру данных для будущей передачи информации от UEFI-загрузчика ядру.
+
+До появления собственной политики виртуальной памяти адреса в этой структуре считаются физическими. Нельзя менять порядок существующих полей без увеличения версии структуры или документированного плана совместимости.
+
+## Ранняя диагностика
+
+Драйвер последовательного порта ядра использует COM1 с базовым адресом ввода-вывода `0x3F8`. Ожидание готовности передатчика ограничено по числу попыток, чтобы избежать бесконечного зависания.
+
+Вывод через последовательный порт предназначен для журналов QEMU и ранней диагностики на реальном оборудовании.
+
+## Планируемые границы подсистем
+
+- `arch/x86_64`: настройка CPU, GDT, IDT, обработчики исключений и переключение контекста.
+- `mm`: распределитель физических страниц, управление виртуальными адресными пространствами и kernel heap.
+- `interrupts`: обработчики исключений, маршрутизация PIC/APIC и источник таймера.
+- `scheduler`: потоки, очереди готовых задач и переключение контекста.
+- `syscall`: ABI системных вызовов и переходы между пользовательским и привилегированным режимами.
+- `drivers`: консоль, накопители, устройства ввода, перечисление PCI и таймеры.
+- `fs`: VFS и начальная файловая система в памяти.
+- `userspace`: процесс init, командная оболочка и системные утилиты.
+- `graphics`: сначала консоль на framebuffer, позднее композитор и оконная система.
+
+Это планируемые границы архитектуры, а не уже реализованные подсистемы.
