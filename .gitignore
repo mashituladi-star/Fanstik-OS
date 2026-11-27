@@ -1,0 +1,8 @@
+/build/
+*.o
+*.obj
+*.elf
+*.EFI
+*.img
+*.log
+.DS_Store
