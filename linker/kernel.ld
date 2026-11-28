@@ -8,5 +8,6 @@ SECTIONS {
     .rodata ALIGN(0x1000) : { *(.rodata .rodata.*) } :text
     .data ALIGN(0x1000) : { *(.data .data.*) } :data
     .bss ALIGN(0x1000) (NOLOAD) : { *(COMMON) *(.bss .bss.*) } :data
+    PROVIDE(kernel_end = .);
     /DISCARD/ : { *(.comment) *(.note*) *(.eh_frame*) }
 }
